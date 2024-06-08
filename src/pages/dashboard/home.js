@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -19,6 +20,7 @@ import {
   ToyotaComponent,
 } from "../../components/svg";
 import { useNavigation } from "@react-navigation/native";
+import { AuthContext } from "../../context/authContext";
 
 export default function HomeScreen({ route: { params } }) {
   const [showLocation, setShowLocation] = useState(false);
@@ -27,6 +29,9 @@ export default function HomeScreen({ route: { params } }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const navigation = useNavigation();
+
+  const { auth } = useContext(AuthContext);
+  // console.log(auth);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);

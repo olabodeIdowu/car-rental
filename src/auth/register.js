@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import axios from "axios";
 import {
   Alert,
   Image,
@@ -17,11 +18,45 @@ export default function RegisterScreen({ navigation, route: { params } }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const form = {
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    password: password,
+    confirmPassword: confirmPassword,
+  };
+
+  async function signup() {
+    try {
+      setIsLoading(true);
+      const response = await axios({
+        method: "post",
+        url: `${process.env.DEV_API_URL}/users/signup-user-with-email`,
+        data: form,
+        withCredentials: true,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response) throw new Error("response not found");
+      setIsLoading(false);
+      // console.log(response?.data?.data?.user);
+      const user = response?.data?.data?.user;
+      navigation.navigate("verify-OTP-screen", { user: user });
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+      Alert.alert("Error", error.message, [{ text: "OK" }]);
+    }
+  }
   return (
     <View style={styles.container}>
       <View>
@@ -31,13 +66,23 @@ export default function RegisterScreen({ navigation, route: { params } }) {
         </Text>
 
         <View>
-          <Text style={styles.label}>Name</Text>
+          <Text style={styles.label}>First Name</Text>
           <TextInput
             name="name"
             style={styles.input}
-            placeholder="Ex. Olabode Idowu"
-            onChangeText={(text) => setName(text)}
-            value={name}
+            placeholder="Ex. Olabode"
+            onChangeText={(text) => setFirstName(text)}
+            value={firstName}
+          />
+        </View>
+        <View>
+          <Text style={styles.label}>Last Name</Text>
+          <TextInput
+            name="name"
+            style={styles.input}
+            placeholder="Ex. Idowu"
+            onChangeText={(text) => setLastName(text)}
+            value={lastName}
           />
         </View>
         <View>
@@ -118,11 +163,7 @@ export default function RegisterScreen({ navigation, route: { params } }) {
           </TouchableOpacity>
         </View>
 
-        <Pressable
-          style={styles.button}
-          onPress={() => navigation.navigate("verify-OTP-screen")}
-          activeOpacity={0.4}
-        >
+        <Pressable style={styles.button} onPress={signup} activeOpacity={0.4}>
           {isLoading ? (
             <View style={styles.horizontal}>
               <ActivityIndicator />

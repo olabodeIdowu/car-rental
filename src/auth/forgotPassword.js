@@ -1,5 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
+import axios from "axios";
 import {
   Alert,
   Image,
@@ -16,6 +17,33 @@ export default function ForgotPasswordScreen({ route: { params } }) {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
+
+  async function forgotPassword() {
+    try {
+      setIsLoading(true);
+      // console.log(email, process.env.DEV_API_URL);
+      const response = await axios({
+        method: "post",
+        url: `${process.env.DEV_API_URL}/users/forgot-user-password`,
+        data: {
+          email: email,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      setIsLoading(false);
+      if (!response) throw new Error("response not found");
+      navigation.navigate("reset-password-screen");
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+      Alert.alert("Error", "There is no user with this email address", [
+        { text: "OK" },
+      ]);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -56,7 +84,7 @@ export default function ForgotPasswordScreen({ route: { params } }) {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("reset-password-screen")}
+          onPress={forgotPassword}
           activeOpacity={0.4}
         >
           {isLoading ? (

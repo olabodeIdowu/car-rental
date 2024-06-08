@@ -1,23 +1,80 @@
-import { useState } from "react";
+import React, { useContext, useState } from "react";
+import axios from "axios";
 import {
   View,
   Text,
   StyleSheet,
-  TextInput,
+  Alert,
+  ActivityIndicator,
   TouchableOpacity,
   Image,
   SafeAreaView,
-  Pressable,
+  RefreshControl,
+  ScrollView,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
+import { AuthContext } from "../../context/authContext";
+import EditProfileModal from "../../components/editProfileModal";
 
 export default function ProfileScreen({ route: { params } }) {
-  const [showLocation, setShowLocation] = useState(false);
-  const [newNotification, setNewNotification] = useState(false);
-  const [openSearch, setOpenSearch] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const navigation = useNavigation();
+  const { auth } = useContext(AuthContext);
+  const [isClosingAccount, setIsClosingAccount] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+  // console.log(auth);
+  const { user } = auth;
+
+  async function logout() {
+    try {
+      setIsLoading(true);
+      await axios({
+        method: "post",
+        url: `${process.env.DEV_API_URL}/users/logout-user`,
+        withCredentials: true,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      navigation.navigate("login-screen");
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+      Alert.alert("Error", error.message, [{ text: "OK" }]);
+    }
+  }
+
+  async function deleteAccount() {
+    try {
+      setIsClosingAccount(true);
+      await axios({
+        method: "patch",
+        url: `${process.env.DEV_API_URL}/users/${user?.id}/delete-user`,
+        withCredentials: true,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      setIsClosingAccount(false);
+      navigation.navigate("login-screen");
+    } catch (error) {
+      setIsClosingAccount(false);
+      console.log(error);
+      Alert.alert("Error", error.message, [{ text: "OK" }]);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -29,7 +86,7 @@ export default function ProfileScreen({ route: { params } }) {
                 height: 150,
                 borderRadius: "50%",
               }}
-              source={require("./../../../assets/users/user.png")}
+              source={user?.photo}
             />
 
             <View
@@ -40,18 +97,37 @@ export default function ProfileScreen({ route: { params } }) {
                 padding: 5,
               }}
             >
-              <Text style={{ fontWeight: 700, fontSize: 22 }}>Jenny Doe</Text>
+              <Text style={{ fontWeight: 700, fontSize: 22 }}>
+                {user?.firstName} {user?.lastName}
+              </Text>
               <MaterialCommunityIcons
                 name="check-decagram"
                 color="#ffffff"
                 size={12}
               />
+              <TouchableOpacity
+                onPress={() => {
+                  setOpenEdit(true);
+                }}
+                style={styles.ibackground}
+                activeOpacity={0.4}
+              >
+                <MaterialCommunityIcons name="pen" color="#007FFF" size={24} />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </View>
 
-      <View style={styles.mainbody}>
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVericalScrollIndicator={false}
+        bounces={true}
+        style={styles.mainbody}
+      >
         <View style={[styles.flex, { paddingTop: 10, paddingBottom: 10 }]}>
           <Text
             style={{
@@ -65,7 +141,7 @@ export default function ProfileScreen({ route: { params } }) {
             Fullname
           </Text>
           <Text style={{ color: "#444", fontSize: 16, fontWeight: 800 }}>
-            Test User
+            {`${user?.firstName}` + " " + `${user?.lastName}`}
           </Text>
         </View>
         <View style={[styles.flex, { paddingTop: 10, paddingBottom: 10 }]}>
@@ -81,7 +157,7 @@ export default function ProfileScreen({ route: { params } }) {
             Email
           </Text>
           <Text style={{ color: "#444", fontSize: 16, fontWeight: 800 }}>
-            example@user.com
+            {user?.email}
           </Text>
         </View>
         <View style={[styles.flex, { paddingTop: 10, paddingBottom: 10 }]}>
@@ -97,7 +173,7 @@ export default function ProfileScreen({ route: { params } }) {
             Gender
           </Text>
           <Text style={{ color: "#444", fontSize: 16, fontWeight: 800 }}>
-            Male
+            {user?.gender}
           </Text>
         </View>
         <View style={[styles.flex, { paddingTop: 10, paddingBottom: 10 }]}>
@@ -113,11 +189,12 @@ export default function ProfileScreen({ route: { params } }) {
             Phone
           </Text>
           <Text style={{ color: "#444", fontSize: 16, fontWeight: 800 }}>
-            (+234) 906-674-0000
+            (+234) {user?.phone}
           </Text>
         </View>
         <View style={{ marginTop: 15 }}>
           <TouchableOpacity
+            onPress={() => navigation.navigate("update-password-screen")}
             activeOpacity={0.4}
             style={[styles.flexRow, { paddingTop: 10, paddingBottom: 10 }]}
           >
@@ -131,6 +208,7 @@ export default function ProfileScreen({ route: { params } }) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            onPress={() => navigation.navigate("update-email-screen")}
             activeOpacity={0.4}
             style={[styles.flexRow, { paddingTop: 10, paddingBottom: 10 }]}
           >
@@ -154,16 +232,48 @@ export default function ProfileScreen({ route: { params } }) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            onPress={logout}
             activeOpacity={0.4}
             style={[styles.flexRow, { paddingTop: 10, paddingBottom: 10 }]}
           >
             <MaterialCommunityIcons name="logout" color="#6497b1" size={24} />
-            <Text style={{ color: "#444", fontSize: 18, fontWeight: 800 }}>
-              Log out
-            </Text>
+            {isLoading ? (
+              <View style={styles.horizontal}>
+                <ActivityIndicator />
+              </View>
+            ) : (
+              <Text style={{ color: "#444", fontSize: 18, fontWeight: 800 }}>
+                Logout
+              </Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={deleteAccount}
+            activeOpacity={0.4}
+            style={[styles.flexRow, { paddingTop: 10, paddingBottom: 10 }]}
+          >
+            <MaterialCommunityIcons name="delete" color="#6497b1" size={24} />
+            {isClosingAccount ? (
+              <View style={styles.horizontal}>
+                <ActivityIndicator />
+              </View>
+            ) : (
+              <Text style={{ color: "#444", fontSize: 18, fontWeight: 800 }}>
+                Close Account
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
+      {openEdit && (
+        <EditProfileModal openEdit={openEdit} setOpenEdit={setOpenEdit} />
+      )}
+      {/* {openSettings && (
+        <SettingsModal
+          openSettings={openSettings}
+          setOpenSettings={setOpenSettings}
+        />
+      )} */}
     </SafeAreaView>
   );
 }
@@ -235,34 +345,24 @@ const styles = StyleSheet.create({
     elevation: 14,
     height: 310,
   },
-  notificationbackground: {
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#c8c6c4",
-    width: 35,
-    height: 35,
-    borderRadius: 8,
-  },
-  sortbackground: {
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 0.5,
-    borderColor: "#ffffff",
-    width: 45,
-    height: 45,
-    borderRadius: 8,
-    backgroundColor: "#ffffff",
-  },
 
-  brandbackground: {
+  ibackground: {
     backgroundColor: "#f0f0f0",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 0.5,
     borderColor: "#ffffff",
-    width: 60,
-    height: 60,
+    width: 30,
+    height: 30,
     borderRadius: "50%",
+  },
+  buttonText: {
+    color: "#222",
+    fontSize: 20,
+  },
+  horizontal: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 10,
   },
 });

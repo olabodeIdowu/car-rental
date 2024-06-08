@@ -32,7 +32,7 @@ export default function MyBookingScreen({ route: { params } }) {
       <View style={styles.nav}>
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate("dashboard-screen");
+            navigation.goBack();
           }}
           style={styles.ibackground}
           activeOpacity={0.4}

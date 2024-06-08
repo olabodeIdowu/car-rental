@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useContext, useState } from "react";
 import {
   Alert,
@@ -12,12 +13,54 @@ import {
   Pressable,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { AuthContext } from "../context/authContext";
 
-export default function LpginScreen({ navigation, route: { params } }) {
+export default function LoginScreen({ navigation, route: { params } }) {
   const [showPassword, setShowPassword] = useState(false);
+  const { setAuth } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const form = {
+    email: email,
+    password: password,
+  };
+
+  async function login() {
+    try {
+      setIsLoading(true);
+      const response = await axios({
+        method: "post",
+        url: `${process.env.DEV_API_URL}/users/login-user-with-email`,
+        data: form,
+        withCredentials: true,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      setIsLoading(false);
+      if (!response) throw new Error("response not found");
+      // console.log(
+      //   response?.data?.userToken,
+      //   response?.data?.userRefreshToken,
+      //   response?.data?.data?.user
+      // );
+
+      setAuth({
+        userToken: response?.data?.userToken,
+        userRefreshToken: response?.data?.userRefreshToken,
+        user: response?.data?.data?.user,
+      });
+
+      navigation.navigate("dashboard-screen");
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+      Alert.alert("Error", error.message, [{ text: "OK" }]);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -61,11 +104,7 @@ export default function LpginScreen({ navigation, route: { params } }) {
             Forgot password?
           </Text>
         </TouchableOpacity>
-        <Pressable
-          style={styles.button}
-          // onPress={handleRegister}
-          activeOpacity={0.4}
-        >
+        <Pressable style={styles.button} onPress={login} activeOpacity={0.4}>
           {isLoading ? (
             <View style={styles.horizontal}>
               <ActivityIndicator />

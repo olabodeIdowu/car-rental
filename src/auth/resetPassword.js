@@ -15,9 +15,36 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 export default function ResetPasswordScreen({ route: { params } }) {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
-  const [emailOTP, setEmailOTP] = useState("");
+  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  async function resetPassword() {
+    try {
+      setIsLoading(true);
+      // console.log(process.env.DEV_API_URL);
+      const response = await axios({
+        method: "post",
+        url: `${process.env.DEV_API_URL}/users/reset-user-password`,
+        data: {
+          otp: otp,
+          password: password,
+          confirmPassword: confirmPassword,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      setIsLoading(false);
+      if (!response) throw new Error("response not found");
+      // console.log(response);
+      navigation.navigate("Login");
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+      Alert.alert("Error", error.message, [{ text: "OK" }]);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -46,20 +73,25 @@ export default function ResetPasswordScreen({ route: { params } }) {
           </Text>
 
           <View>
+            <Text style={styles.label}>OTP</Text>
             <TextInput
               style={styles.input}
               placeholder="enter your OTP"
-              onChangeText={(text) => setEmailOTP(text)}
-              value={emailOTP}
+              onChangeText={(text) => setOtp(text)}
+              value={otp}
             />
-
+          </View>
+          <View>
+            <Text style={styles.label}>Set Password</Text>
             <TextInput
               style={styles.input}
               onChangeText={(text) => setPassword(text)}
               value={password}
               placeholder="password"
             />
-
+          </View>
+          <View>
+            <Text style={styles.label}>Confirm Password</Text>
             <TextInput
               style={styles.input}
               onChangeText={(text) => setConfirmPassword(text)}
@@ -70,7 +102,7 @@ export default function ResetPasswordScreen({ route: { params } }) {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate("login-screen")}
+            onPress={resetPassword}
             activeOpacity={0.4}
           >
             {isLoading ? (

@@ -29,6 +29,8 @@ import SearchScreen from "./src/components/search";
 import FilterScreen from "./src/components/filter";
 import MyBookingScreen from "./src/pages/bookings/myBookings";
 import ConversationScreen from "./src/components/conversationScreen";
+import AuthContextProvider from "./src/context/authContext";
+import UpdateEmailScreen from "./src/auth/changeEmail";
 // import Calendar from "./src/components/calendar";
 
 const Stack = createStackNavigator();
@@ -63,6 +65,7 @@ const NavigationStack = () => {
         name="update-password-screen"
         component={UpdatePasswordScreen}
       />
+      <Stack.Screen name="update-email-screen" component={UpdateEmailScreen} />
 
       <Stack.Screen name="dashboard-screen" component={DashboardScreen} />
       <Stack.Screen
@@ -110,11 +113,11 @@ const NavigationStack = () => {
 
 export default () => {
   return (
-    // <SafeAreaView style={styles.container}>
-    <NavigationContainer>
-      <NavigationStack />
-    </NavigationContainer>
-    // </SafeAreaView>
+    <AuthContextProvider>
+      <NavigationContainer>
+        <NavigationStack />
+      </NavigationContainer>
+    </AuthContextProvider>
   );
 };
 

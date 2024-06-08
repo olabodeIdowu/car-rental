@@ -12,24 +12,20 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-export default function UpdatePasswordScreen({ route: { params } }) {
+export default function UpdateEmailScreen({ route: { params } }) {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState("");
 
-  async function updatePassword() {
+  async function changeEmail() {
     try {
       setIsLoading(true);
       // console.log(email, process.env.DEV_API_URL);
       const response = await axios({
         method: "post",
-        url: `${process.env.DEV_API_URL}/users/update-user-password`,
+        url: `${process.env.DEV_API_URL}/users/change-user-email`,
         data: {
-          currentPassword: currentPassword,
-          password: password,
-          confirmPassword: confirmPassword,
+          email: email,
         },
         headers: {
           "Content-Type": "application/json",
@@ -57,44 +53,26 @@ export default function UpdatePasswordScreen({ route: { params } }) {
           <Text style={styles.backText}>&larr;</Text>
         </TouchableOpacity>
 
-        <Text style={styles.skipText}>Update Password</Text>
+        <Text style={styles.skipText}>Update Email</Text>
       </View>
       <View>
         <Text style={styles.welcomeText}>
-          Your new Password must be different from prevous used Passwords
+          Your new Email must be different from prevous used emails
         </Text>
 
         <View>
-          <Text style={styles.label}>Current Password</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="current Password"
-            onChangeText={(text) => setCurrentPassword(text)}
-            value={currentPassword}
-          />
-        </View>
-        <View>
-          <Text style={styles.label}>Set Password</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={(text) => setPassword(text)}
-            value={password}
-            placeholder="password"
-          />
-        </View>
-        <View>
-          <Text style={styles.label}>Set Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={(text) => setConfirmPassword(text)}
-            value={confirmPassword}
-            placeholder="confirm Password"
+            placeholder="email"
+            onChangeText={(text) => setEmail(text)}
+            value={email}
           />
         </View>
 
         <TouchableOpacity
           style={styles.button}
-          onPress={updatePassword}
+          onPress={changeEmail}
           activeOpacity={0.4}
         >
           {isLoading ? (

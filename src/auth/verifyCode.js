@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import axios from "axios";
 import {
   Alert,
   TextInput,
@@ -22,58 +23,55 @@ export default function VerifyOTPScreen({ route: { params } }) {
   const [codeFive, setCodeFive] = useState("");
   const [codeSix, setCodeSix] = useState("");
   const [resendClick, setResendClick] = useState(false);
-
+  const { user } = params;
   // console.log(user);
 
-  // async function handleVerifyOTP() {
-  //   try {
-  //     setIsLoading(true);
-  //     // console.log(
-  //     //   codeOne + codeTwo + codeThree + codeFour + codeFive + codeSix
-  //     // );
-  //     const response = await axios({
-  //       method: "post",
-  //       url: `${process.env.DEV_API_URL}/users/verify-user-email-OTP`,
-  //       data: {
-  //         emailOTP:
-  //           codeOne + codeTwo + codeThree + codeFour + codeFive + codeSix,
-  //       },
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-  //     setIsLoading(false);
-  //     if (!response) throw new Error("response not found");
-  //     navigation.navigate("Registration3");
-  //   } catch (error) {
-  //     setIsLoading(false);
-  //     console.log(error);
-  //     Alert.alert("Error", error.message, [{ text: "OK" }]);
-  //   }
-  // }
+  async function verifyOtp() {
+    try {
+      setIsLoading(true);
+      // console.log(
+      //   codeOne + codeTwo + codeThree + codeFour + codeFive + codeSix
+      // );
+      const response = await axios({
+        method: "post",
+        url: `${process.env.DEV_API_URL}/users/verify-user-OTP`,
+        data: {
+          otp: codeOne + codeTwo + codeThree + codeFour + codeFive + codeSix,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      setIsLoading(false);
+      if (!response) throw new Error("response not found");
+      // console.log(response);
+      navigation.navigate("login-screen");
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+      Alert.alert("Error", error.message, [{ text: "OK" }]);
+    }
+  }
 
-  // async function resendEmailVerificationOTP() {
-  //   try {
-  //     setResendClick(true);
-  //     const response = await axios({
-  //       method: "post",
-  //       url: `${process.env.DEV_API_URL}/users/resend-user-verification-email`,
-  //       data: {
-  //         email: user?.email,
-  //       },
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-  //     // setLoading(false)
-  //     if (!response) throw new Error("response not found");
-  //     console.log(response?.message);
-  //   } catch (error) {
-  //     // setLoading(false)
-  //     console.log(error);
-  //     Alert.alert("Error", error.message, [{ text: "OK" }]);
-  //   }
-  // }
+  async function resendVerificationOTP() {
+    try {
+      setResendClick(true);
+      const response = await axios({
+        method: "post",
+        url: `${process.env.DEV_API_URL}/users/send-user-verification-otp`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      // setLoading(false)
+      if (!response) throw new Error("response not found");
+      console.log(response?.message);
+    } catch (error) {
+      // setLoading(false)
+      console.log(error);
+      Alert.alert("Error", error.message, [{ text: "OK" }]);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -92,12 +90,12 @@ export default function VerifyOTPScreen({ route: { params } }) {
         {resendClick ? (
           <Text style={styles.secondaryHeaderText}>
             Another code was resend to{" "}
-            <Text style={{ color: "#007FFF" }}>example@user.com</Text>
+            <Text style={{ color: "#007FFF" }}>{user?.email}</Text>
           </Text>
         ) : (
           <Text style={styles.secondaryHeaderText}>
             Enter the code that was sent to{" "}
-            <Text style={{ color: "#007FFF" }}>example@user.com</Text>
+            <Text style={{ color: "#007FFF" }}>{user?.email}</Text>
           </Text>
         )}
 
@@ -142,8 +140,7 @@ export default function VerifyOTPScreen({ route: { params } }) {
 
         <TouchableOpacity
           style={styles.button}
-          // onPress={handleVerifyOTP}
-          onPress={() => navigation.navigate("dashboard-screen")}
+          onPress={verifyOtp}
           activeOpacity={0.4}
         >
           {isLoading ? (
@@ -157,7 +154,7 @@ export default function VerifyOTPScreen({ route: { params } }) {
 
         <Text style={{ color: "#555", padding: 30, textAlign: "center" }}>
           We send you code to your email{" "}
-          <Text style={{ color: "#007FFF" }}>example@user.com.</Text>
+          <Text style={{ color: "#007FFF" }}>{user?.email}.</Text>
           You can check your inbox.
         </Text>
         <View
@@ -179,10 +176,7 @@ export default function VerifyOTPScreen({ route: { params } }) {
             I didn't received the code?
           </Text>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate("send-otp-again")}
-            activeOpacity={0.4}
-          >
+          <TouchableOpacity onPress={resendVerificationOTP} activeOpacity={0.4}>
             <Text
               style={{
                 color: "#007FFF",
